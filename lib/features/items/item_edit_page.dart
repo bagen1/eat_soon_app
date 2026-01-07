@@ -45,10 +45,16 @@ class _ItemEditPageState extends ConsumerState<ItemEditPage> {
       _bestBefore = item.bestBefore;
 
       // If the item has opened-data, enable the section and prefill
-      if (item.openedAt != null && item.openShelfLifeDays != null) {
+      if (item.openedAt != null) {
         _useOpened = true;
         _openedAt = item.openedAt;
+      }
+
+      if(item.openShelfLifeDays != null){
         _shelfLifeController.text = item.openShelfLifeDays.toString();
+      }
+      else{
+        _shelfLifeController.clear();
       }
     }
   }
@@ -101,24 +107,25 @@ class _ItemEditPageState extends ConsumerState<ItemEditPage> {
     DateTime? openedAt;
     int? openShelfLifeDays;
 
-    if (_useOpened) {
-      openedAt = _openedAt;
-      openShelfLifeDays =
-          int.tryParse(_shelfLifeController.text.trim());
-
-      if (openedAt == null ||
-          openShelfLifeDays == null ||
-          openShelfLifeDays <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Please enter an opened date and a valid number of days.',
-            ),
-          ),
-        );
-        return;
-      }
+  if (_useOpened) {
+    openedAt = _openedAt;
+    if (openedAt == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please pick an opened date.')),
+      );
+      return;
     }
+
+    final s = _shelfLifeController.text.trim();
+    openShelfLifeDays = s.isEmpty ? null : int.tryParse(s);
+
+    if (s.isNotEmpty && (openShelfLifeDays == null || openShelfLifeDays <= 0)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Shelf life must be a number greater than 0.')),
+      );
+      return;
+    }
+  }
 
     // Create the domain model.
     // If both "best before" and "opened" data exist,
@@ -254,13 +261,17 @@ class _ItemEditPageState extends ConsumerState<ItemEditPage> {
                   controller: _shelfLifeController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    labelText: 'Shelf life after opening (days)',
-                    hintText: 'e.g. 7',
+                    labelText: 'Shelf life after opening (days, optional)',
+                    hintText: 'e.g. 7 (leave empty to only track days opened)',
                     border: OutlineInputBorder(),
                   ),
                   validator: (v) {
                     if (!_useOpened) return null;
-                    final n = int.tryParse((v ?? '').trim());
+
+                    final s = (v ?? '').trim();
+                    if (s.isEmpty) return null; // optional now
+
+                    final n = int.tryParse(s);
                     if (n == null) return 'Enter a whole number';
                     if (n <= 0) return 'Must be greater than 0';
                     return null;
