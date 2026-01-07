@@ -44,15 +44,31 @@ class Item {
     return expiry.difference(DateTime.now()).inDays;
   }
 
+  int? get daysSinceOpened {
+  if (openedAt == null) return null;
+  final openedDate = DateTime(openedAt!.year, openedAt!.month, openedAt!.day);
+  final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  return today.difference(openedDate).inDays;
+  }
+
   bool get isExpired => daysLeft != null && daysLeft! < 0;
 
-  String get expiryLabel {
-    final d = daysLeft;
-    if (d == null) return 'No expiration date';
-    if (d < 0) return 'Expired';
-    if (d == 0) return 'Expires today';
-    if (d == 1) return '1 day left';
-    return '$d days left';
+  String get duartionLabel {
+    if (openedAt != null && openShelfLifeDays == null) {
+      final openedDays = daysSinceOpened ?? 0;
+      if (openedDays == 0) return 'Opened today';
+      if (openedDays == 1) return 'Opened 1 day ago';
+      return 'Opened $openedDays days ago';
+    } else {
+      final d = daysLeft;
+      if (d != null) {
+        if (d < 0) return 'Expired';
+        if (d == 0) return 'Expires today';
+        if (d == 1) return '1 day left';
+        return '$d days left';
+      }
+    }
+    return 'No expiration date';
   }
 
   Item copyWith({

@@ -21,7 +21,7 @@ class ItemsListPage extends ConsumerWidget {
 
           return ListTile(
             title: Text(item.name),
-            subtitle: Text(item.expiryLabel),
+            subtitle: Text(item.duartionLabel),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
